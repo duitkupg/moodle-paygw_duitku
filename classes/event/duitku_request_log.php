@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
-* This event is triggered whenever a failed http request occurs
-* @package   paygw_duitku
-* @copyright 2022 Michael David <mikedh2612@gmail.com>
-* @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
-*/
+ * This event is triggered whenever a failed http request occurs
+ * @package   paygw_duitku
+ * @copyright 2022 Michael David <mikedh2612@gmail.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace paygw_duitku\event;
 
@@ -31,28 +31,45 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright 2022 Michael David <mikedh2612@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class duitku_request_log extends \core\event\base {
-	//Required function by Moodle when extending from event class.
-	//Must also set 'crud' and 'edulevel' value
-	//For more information about events. Check: https://docs.moodle.org/dev/Events_API
-	protected function init() {
-		$this->data['crud'] = 'c'; //c for create (as in a request has been created).
-		$this->data['edulevel'] = self::LEVEL_OTHER; //There are 3 levels. Only this level fits the event (making request).
-	}
 
-	//The name of the log that will show up in the interface
-	public static function get_name() {
-		return get_string('duitku_request_log', 'paygw_duitku');
-	}
+    /**
+     * Overrides the baseclass.
+     *
+     * Set all required data properties:
+     *  1/ crud - letter [crud]
+     *  2/ edulevel - using a constant self::LEVEL_*.
+     *  3/ objecttable - name of database table IF objectid specified
+     *
+     * Optionally it can set:
+     * a/ fixed system context
+     *
+     * @return void
+     */
+    protected function init() {
+        $this->data['crud'] = 'c';
+        $this->data['edulevel'] = self::LEVEL_OTHER; // There are 3 levels. Only this level fits the event (making request).
+    }
 
-	//The description/log of any incoming/outgoing requests from duitku.
-	//Must return string
-	public function get_description() {
-		$desc_string = ""; //Initiaize the string that will be returned for the description column
-		foreach ($this->other as $key=>$value) {
-			$desc_string .= "{$key}  : {$value} <br />";
-		}
-		return $desc_string;
-	}
+    /**
+     * Returns localised general event name.
+     *
+     * @return string
+     */
+    public static function get_name() {
+        return get_string('duitku_request_log', 'paygw_duitku');
+    }
+
+    /**
+     * Returns non-localised event description with id's for admin use only.
+     *
+     * @return string
+     */
+    public function get_description() {
+        $descstring = ""; // Initiaize the string that will be returned for the description column.
+        foreach ($this->other as $key => $value) {
+            $descstring .= "{$key}  : {$value} <br />";
+        }
+        return $descstring;
+    }
 }

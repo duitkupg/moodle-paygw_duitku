@@ -16,7 +16,7 @@
 
 /**
  * Checks the referenceUrl for expiry (just in case admin does not run cron)
- * 
+ *
  * @package   paygw_duitku
  * @copyright 2022 Michael David <mikedh2612@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,7 +28,9 @@ use paygw_duitku\duitku_status_codes;
 
 require('../../../config.php');
 
-$merchantOrderId = required_param('merchantOrderId', PARAM_ALPHANUMEXT);;
+require_login();
+
+$merchantorderid = required_param('merchantOrderId', PARAM_ALPHANUMEXT);;
 $component = required_param('component', PARAM_ALPHANUMEXT);
 $paymentarea = required_param('paymentarea', PARAM_ALPHANUMEXT);
 $itemid = required_param('itemid', PARAM_INT);
@@ -36,48 +38,47 @@ $description = required_param('description', PARAM_TEXT);
 $config = (object) helper::get_gateway_configuration($component, $paymentarea, $itemid, 'duitku');
 
 $environment = $config->environment;
-$merchantCode = $config->merchantcode;
-$apiKey = $config->apikey;
-$expiryPeriod = $config->expiry;
+$merchantcode = $config->merchantcode;
+$apikey = $config->apikey;
 
-$courseid = ""; //Initialize course outside of if scope
+$courseid = ""; // Initialize course outside of if scope.
 if ($component == 'enrol_fee' && $paymentarea == 'fee') {
-	$courseid = $DB->get_field('enrol', 'courseid', ['enrol' => 'fee', 'id' => $itemid]);
+    $courseid = $DB->get_field('enrol', 'courseid', ['enrol' => 'fee', 'id' => $itemid]);
 }
 $context = context_course::instance($courseid, MUST_EXIST);
 
-$duitku_helper = new duitku_helper($merchantCode, $apiKey, $merchantOrderId, $environment);
-$request_data  = $duitku_helper->check_transaction($context);
-$response = json_decode($request_data['request']);
-$httpCode	 = $request_data['httpCode'];
+$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantorderid, $environment);
+$requestdata  = $duitkuhelper->check_transaction($context);
+$response = json_decode($requestdata['request']);
+$httpcode = $requestdata['httpCode'];
 
 $params = [
-	'userid' => $USER->id,
-	'component' => $component,
-	'paymentarea' => $paymentarea,
-	'itemid' => $itemid,
-	'payment_status' => duitku_status_codes::CHECK_STATUS_PENDING
+    'userid' => $USER->id,
+    'component' => $component,
+    'paymentarea' => $paymentarea,
+    'itemid' => $itemid,
+    'payment_status' => duitku_status_codes::CHECK_STATUS_PENDING
 ];
-$existing_data = $DB->get_record('paygw_duitku', $params);
+$existingdata = $DB->get_record('paygw_duitku', $params);
 
-//Check for HTTP code first.
-//Earlier PHP versions would throw an error to $response->statusCode if not found. Later version would not. 
-if (($httpCode === 404) && (!empty($existing_data))) {
-	$redirectUrl = $environment === 'sandbox' ? 'https://app-sandbox.duitku.com/' : 'https://app-prod.duitku.com/';
-	$redirectUrl .= 'redirect_checkout?reference=' . $existing_data->reference;
-	header('location: '. $redirectUrl);die;
+// Check for HTTP code first.
+// Earlier PHP versions would throw an error to $response->statusCode if not found. Later version would not.
+if (($httpcode === 400) && (!empty($existingdata))) {
+    $redirecturl = $environment === 'sandbox' ? 'https://app-sandbox.duitku.com/' : 'https://app-prod.duitku.com/';
+    $redirecturl .= 'redirect_checkout?reference=' . $existingdata->reference;
+    header('location: '. $redirecturl);die;
 }
 
-if (($httpCode === 404) && (empty($existing_data))) {
-	$redirectUrl = "{$CFG->wwwroot}/payment/gateway/duitku/call.php?component={$component}&paymentarea={$paymentarea}&itemid={$itemid}&description={$description}";
-	header('location: '. $redirectUrl);die;
+if (($httpcode === 400) && (empty($existingdata))) {
+    $redirecturl = "{$CFG->wwwroot}/payment/gateway/duitku/call.php?component={$component}&paymentarea={$paymentarea}&itemid={$itemid}&description={$description}";
+    header('location: '. $redirecturl);die;
 }
 
 if ($response->statusCode === duitku_status_codes::CHECK_STATUS_CANCELED) {
-	$redirectUrl = "{$CFG->wwwroot}/payment/gateway/duitku/call.php?component={$component}&paymentarea={$paymentarea}&itemid={$itemid}&description={$description}";
-	header('location: '. $redirectUrl);die;
+    $redirecturl = "{$CFG->wwwroot}/payment/gateway/duitku/call.php?component={$component}&paymentarea={$paymentarea}&itemid={$itemid}&description={$description}";
+    header('location: '. $redirecturl);die;
 } else {
-	$redirectUrl = $environment === 'sandbox' ? 'https://app-sandbox.duitku.com/' : 'https://app-prod.duitku.com/';
-	$redirectUrl .= 'redirect_checkout?reference=' . $existing_data->reference;
-	header('location: '. $redirectUrl);die;
+    $redirecturl = $environment === 'sandbox' ? 'https://app-sandbox.duitku.com/' : 'https://app-prod.duitku.com/';
+    $redirecturl .= 'redirect_checkout?reference=' . $existingdata->reference;
+    header('location: '. $redirecturl);die;
 }

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * handles callback received from Duitku
+ *
  * @package   paygw_duitku
  * @copyright 2022 Michael David <mikedh2612@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -25,41 +27,42 @@ use paygw_duitku\duitku_mathematical_constants;
 use paygw_duitku\duitku_helper;
 use paygw_duitku\duitku_status_codes;
 
+// Does not require login.
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
 
-/// Keep out casual intruders
+// Keep out casual intruders.
 if (empty($_POST) or !empty($_GET)) {
-	http_response_code(400);
-	throw new moodle_exception('invalidrequest', 'core_error');
+    http_response_code(400);
+    throw new moodle_exception('invalidrequest', 'core_error');
 }
 
-$merchantCode = isset($_POST['merchantCode']) ? $_POST['merchantCode'] : null;
+$merchantcode = isset($_POST['merchantCode']) ? $_POST['merchantCode'] : null;
 $amount = isset($_POST['amount']) ? $_POST['amount'] : null;
-$merchantOrderId = isset($_POST['merchantOrderId']) ? $_POST['merchantOrderId'] : null;
-$productDetail = isset($_POST['productDetail']) ? $_POST['productDetail'] : null;
-$additionalParam = isset($_POST['additionalParam']) ? $_POST['additionalParam'] : null;
-$paymentCode = isset($_POST['paymentCode']) ? $_POST['paymentCode'] : null;
-$resultCode = isset($_POST['resultCode']) ? $_POST['resultCode'] : null;
-$merchantUserId = isset($_POST['merchantUserId']) ? $_POST['merchantUserId'] : null;
+$merchantordeird = isset($_POST['merchantOrderId']) ? $_POST['merchantOrderId'] : null;
+$productdetail = isset($_POST['productDetail']) ? $_POST['productDetail'] : null;
+$additionalparam = isset($_POST['additionalParam']) ? $_POST['additionalParam'] : null;
+$paymentcode = isset($_POST['paymentCode']) ? $_POST['paymentCode'] : null;
+$resultcode = isset($_POST['resultCode']) ? $_POST['resultCode'] : null;
+$merchantuserid = isset($_POST['merchantUserId']) ? $_POST['merchantUserId'] : null;
 $reference = isset($_POST['reference']) ? $_POST['reference'] : null;
 $signature = isset($_POST['signature']) ? $_POST['signature'] : null;
 
 
-//Making sure that merchant order id is in the correct format
-$custom = explode('-', $merchantOrderId);
+// Making sure that merchant order id is in the correct format.
+$custom = explode('-', $merchantordeird);
 if (empty($custom) || count($custom) < 5) {
-	throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Invalid value of the request param: custom');
+    throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Invalid value of the request param: custom');
 }
 
-//Make sure all of the parameters are there
-if (empty($merchantCode) || empty($amount) || empty($merchantOrderId) || empty($signature)) {
-	throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Bad Parameter');
+// Make sure all of the parameters are there.
+if (empty($merchantcode) || empty($amount) || empty($merchantordeird) || empty($signature)) {
+    throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Bad Parameter');
 }
 
-//Make sure it is not a failed payment
-if (($resultCode !== duitku_status_codes::CHECK_STATUS_SUCCESS)) {
-	throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Payment Failed');
+// Make sure it is not a failed payment.
+if (($resultcode !== duitku_status_codes::CHECK_STATUS_SUCCESS)) {
+    throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Payment Failed');
 }
 
 $userid = (int)$custom[3];
@@ -71,36 +74,36 @@ $timestamp = (int)$custom[4];
 $config = (object) helper::get_gateway_configuration($component, $paymentarea, $itemid, 'duitku');
 $payable = helper::get_payable($component, $paymentarea, $itemid);
 
-$apiKey = $config->apikey;
-$expiryPeriod = $config->expiry;
+$apikey = $config->apikey;
+$expiryperiod = $config->expiry;
 $environment = $config->environment;
-$params = $merchantCode . $amount . $merchantOrderId . $apiKey;
-$calcSignature = md5($params);
-if ($signature != $calcSignature) {
-	throw new Exception('Bad Signature');
+$params = $merchantcode . $amount . $merchantordeird . $apikey;
+$calcsignature = md5($params);
+if ($signature != $calcsignature) {
+    throw new Exception('Bad Signature');
 }
 
-$referenceUrl = "{$CFG->wwwroot}/payment/gateway/duitku/reference_check.php?component={$component}&paymentarea={$paymentarea}&itemid={$itemid}&merchantOrderId={$merchantOrderId}&description={$productDetail}";
+$referenceurl = "{$CFG->wwwroot}/payment/gateway/duitku/reference_check.php?";
+$referenceurl .= "component={$component}&paymentarea={$paymentarea}&itemid={$itemid}&merchantOrderId={$merchantordeird}&description={$productdetail}";
 
-$courseid = ""; //Initialize course outside of if scope
+$courseid = ""; // Initialize course outside of if scope.
 if ($component == 'enrol_fee' && $paymentarea == 'fee') {
-	$courseid = $DB->get_field('enrol', 'courseid', ['enrol' => 'fee', 'id' => $itemid]);
+    $courseid = $DB->get_field('enrol', 'courseid', ['enrol' => 'fee', 'id' => $itemid]);
 } else {
-	throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Invalid Course');
+    throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Invalid Course');
 }
 $context = context_course::instance($courseid, MUST_EXIST);
 
-//Double check on transaction before continuing
-$duitku_helper = new duitku_helper($merchantCode, $apiKey, $merchantOrderId, $environment);
-$request_data = $duitku_helper->check_transaction($context);
-$response = json_decode($request_data['request']);
-$httpCode = $request_data['httpCode'];
+// Double check on transaction before continuing.
+$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantordeird, $environment);
+$requestdata = $duitkuhelper->check_transaction($context);
+$response = json_decode($requestdata['request']);
 
 if (($response->statusCode !== duitku_status_codes::CHECK_STATUS_SUCCESS)) {
-	throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Payment Failed');
+    throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Payment Failed');
 }
 
-//Transaction verified
+// Transaction verified.
 $data = new stdClass();
 $data->userid = $userid;
 $data->component = $component;
@@ -109,16 +112,16 @@ $data->itemid = $itemid;
 $data->reference = $reference;
 $data->timestamp = $timestamp;
 $data->signature = $signature;
-$data->merchant_order_id = $merchantOrderId;
+$data->merchant_order_id = $merchantordeird;
 $data->accountid = $payable->get_account_id();
-$data->payment_status = $resultCode;
+$data->payment_status = $resultcode;
 $data->pending_reason = get_string('log_callback', 'paygw_duitku');
 $data->timeupdated = round(microtime(true) * duitku_mathematical_constants::ONE_SECOND_TO_MILLISECONDS);
-$data->expiryperiod = $timestamp + ($expiryPeriod * duitku_mathematical_constants::ONE_MINUTE_TO_SECONDS * duitku_mathematical_constants::ONE_SECOND_TO_MILLISECONDS);
-$data->referenceurl = $referenceUrl;
+$data->expiryperiod = $timestamp + ($expiryperiod * duitku_mathematical_constants::ONE_MINUTE_TO_SECONDS * duitku_mathematical_constants::ONE_SECOND_TO_MILLISECONDS);
+$data->referenceurl = $referenceurl;
 
-$existing_data = $DB->get_record('paygw_duitku', ['reference' => $reference]);
-$data->id = $existing_data->id;
+$existingdata = $DB->get_record('paygw_duitku', ['reference' => $reference]);
+$data->id = $existingdata->id;
 $DB->update_record('paygw_duitku', $data);
 
 // Deliver course.
@@ -132,22 +135,22 @@ $cost = helper::get_rounded_cost($payable->get_amount(), $payable->get_currency(
 $paymentid = helper::save_payment($payable->get_account_id(), $component, $paymentarea, $itemid, $userid, $cost, $payable->get_currency(), 'duitku');
 helper::deliver_order($component, $paymentarea, $itemid, $paymentid, $userid);
 
-$event_array = [
-	'context' => $context,
-	'relateduserid' => $USER->id,
-	'other' => [
-		'Log Detail' => get_string('log_callback', 'paygw_duitku'),
-		'merchantCode' => $merchantCode,
-		'amount' => $amount,
-		'merchantOrderId' => $merchantOrderId,
-		'productDetail' => $productDetail,
-		'paymentCode' => $paymentCode,
-		'resultCode' => $resultCode,
-		'reference' => $reference,
-		'signature' => $signature
-	]
+$eventarray = [
+    'context' => $context,
+    'relateduserid' => $USER->id,
+    'other' => [
+        'Log Detail' => get_string('log_callback', 'paygw_duitku'),
+        'merchantCode' => $merchantcode,
+        'amount' => $amount,
+        'merchantOrderId' => $merchantordeird,
+        'productDetail' => $productdetail,
+        'paymentCode' => $paymentcode,
+        'resultCode' => $resultcode,
+        'reference' => $reference,
+        'signature' => $signature
+    ]
 ];
-$event = \paygw_duitku\event\duitku_request_log::create($event_array);
+$event = \paygw_duitku\event\duitku_request_log::create($eventarray);
 $event->trigger();
 
 // Find redirection.

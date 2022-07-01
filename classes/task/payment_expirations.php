@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
-* Will delete all expired records from paygw_duitku table
-* @package   paygw_duitku
-* @copyright 2022 Michael David <mikedh2612@gmail.com>
-* @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
-*/
+ * Will delete all expired records from paygw_duitku table
+ * @package   paygw_duitku
+ * @copyright 2022 Michael David <mikedh2612@gmail.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace paygw_duitku\task;
 
@@ -28,6 +28,12 @@ use paygw_duitku\duitku_mathematical_constants;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Scheduled task to turn the transaction status of any pending transaction into expired
+ *
+ * @author  2022 Michael David <mikedh2612@gmail.com>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class payment_expirations extends \core\task\scheduled_task {
 
     /**
@@ -48,12 +54,13 @@ class payment_expirations extends \core\task\scheduled_task {
         $transactions = $DB->get_records('paygw_duitku');
 
         foreach ($transactions as $transaction) {
-            $expiryPeriod = (int)$transaction->expiryperiod;
-            if (($expiryPeriod < round(microtime(true) * duitku_mathematical_constants::ONE_SECOND_TO_MILLISECONDS)) && ($transaction->payment_status == duitku_status_codes::CHECK_STATUS_PENDING)) {
-                $object = (object)[ //Somehow only this method of object instantiation works. Others creates errors.
+            $expiryperiod = (int)$transaction->expiryperiod;
+            if (($expiryperiod < round(microtime(true) * duitku_mathematical_constants::ONE_SECOND_TO_MILLISECONDS)) &&
+            ($transaction->payment_status == duitku_status_codes::CHECK_STATUS_PENDING)) {
+                $object = (object)[ // Somehow only this method of object instantiation works. Others creates errors.
                     'id' => $transaction->id,
                     'payment_status' => duitku_status_codes::CHECK_STATUS_CANCELED,
-                    'pending_reason' => 'Transaction expired'
+                    'pending_reason' => get_string('expired_transaction', 'paygw_duitku')
                 ];
                 $DB->update_record('paygw_duitku', $object);
             }

@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Contains all the strings used in the plugin.
+ *
  * @package   paygw_duitku
  * @copyright 2022 Michael David <mikedh2612@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,6 +30,7 @@ $string['environment'] = 'Environment';
 $string['environment_help'] = 'Configure Duitku endpoint to be sandbox or production';
 $string['expiry'] = 'Expiry Period';
 $string['expiry_help'] = 'Expiry period for each transaction. Units set in minutes';
+$string['expired_transaction'] = 'Expired Transaction';
 $string['merchantcode'] = 'Merchant Code';
 $string['merchantcode_help'] = 'Merchant code located in the Project website';
 $string['gatewayname'] = 'Duitku';

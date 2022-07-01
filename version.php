@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Contains the version information.
+ *
  * @package   paygw_duitku
  * @copyright 2022 Michael David <mikedh2612@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -23,10 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-// Reference https://docs.moodle.org/dev/version.php
+// Reference https://docs.moodle.org/dev/version.php.
 
-$plugin->version 	= 2022051800; 
-$plugin->requires 	= 2015111600; 		// Moodle Version 3.0 (could change depending if not supported)
-$plugin->maturity 	= MATURITY_STABLE; 
-$plugin->release 	= '1.1';
-$plugin->component 	= 'paygw_duitku';
+$plugin->version    = 2022051800;
+$plugin->requires   = 2015111600; // Moodle Version 3.0 (could change depending if not supported).
+$plugin->maturity   = MATURITY_STABLE;
+$plugin->release    = '1.1';
+$plugin->component  = 'paygw_duitku';

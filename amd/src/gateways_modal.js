@@ -14,9 +14,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Contains class for Duitku payment gateway.
+ * The modal for Duitku payment gateway.
  *
- * @package   paygw_duitku
  * @copyright 2022 Michael David <mikedh2612@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
