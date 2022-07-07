@@ -60,7 +60,7 @@ $timestamp = (string)round(microtime(true) * paygw_duitku\duitku_mathematical_co
 $merchantorderid = $component . '-' . $paymentarea . '-' .  $itemid . '-' . $USER->id . '-' . $timestamp;
 $callbackurl = "{$CFG->wwwroot}/payment/gateway/duitku/callback.php";
 $returnparam = "component={$component}&paymentarea={$paymentarea}&itemid={$itemid}&description={$description}";
-$returnurl = "{$CFG->wwwroot}/payment/gateway/duitku/return.php?" . $returnparam; // Moodle does not allow more than 180 chars
+$returnurl = "{$CFG->wwwroot}/payment/gateway/duitku/return.php?" . $returnparam; // Moodle does not allow more than 180 chars.
 $phonenumber = empty($USER->phone1) === true ? "" : $USER->phone1;
 $address = [
     'firstName' => $USER->firstname,
