@@ -24,9 +24,6 @@
 
 namespace paygw_duitku;
 
-use curl;
-use phpDocumentor\Reflection\DocBlock\Tags\Var_;
-
 defined('MOODLE_INTERNAL') || die();
 
 /**

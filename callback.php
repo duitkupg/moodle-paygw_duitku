@@ -30,7 +30,6 @@ use paygw_duitku\duitku_status_codes;
 // Does not require login.
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
-require_once($CFG->libdir . '/filelib.php');
 
 // Keep out casual intruders.
 if (empty($_POST) or !empty($_GET)) {
