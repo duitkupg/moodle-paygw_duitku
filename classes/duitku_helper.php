@@ -58,7 +58,7 @@ class duitku_helper {
      * helper constructor.
      *
      * @param string    $merchantcode       Duitku Merchant Code
-     * @param string    $apikey Duitku      API Key.
+     * @param string    $apikey Duitku       API Key.
      * @param string    $merchantorderid    Customly genereted Merchant Order Id at call.php.
      * @param string    $environment        Environment string (sandbox or production).
      */
