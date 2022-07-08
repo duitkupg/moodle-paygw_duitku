@@ -24,9 +24,6 @@
 
 namespace paygw_duitku;
 
-use curl;
-use phpDocumentor\Reflection\DocBlock\Tags\Var_;
-
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -61,17 +58,15 @@ class duitku_helper {
      * helper constructor.
      *
      * @param string    $merchantcode       Duitku Merchant Code
-     * @param string    $apikey Duitku      API Key.
+     * @param string    $apikey Duitku       API Key.
      * @param string    $merchantorderid    Customly genereted Merchant Order Id at call.php.
-     * @param string    $environment        Environment string (sandbox or production).
-     * @param curl      $curl               Curl Moodle class.
+     * @param string    $environment       Environment string (sandbox or production).
      */
-    public function __construct(string $merchantcode, string $apikey, string $merchantorderid, string $environment, $curl) {
+    public function __construct(string $merchantcode, string $apikey, string $merchantorderid, string $environment) {
         $this->merchantcode = $merchantcode;
         $this->apikey = $apikey;
         $this->merchantorderid = $merchantorderid;
         $this->environment = $environment;
-        $this->curl = $curl;
         $this->baseurl = $environment === 'sandbox' ? 'https://api-sandbox.duitku.com/api/merchant' : 'https://api-prod.duitku.com/api/merchant';
     }
 
@@ -86,7 +81,6 @@ class duitku_helper {
     public function create_transaction(string $paramsstring, string $timestamp, \context_course $context) {
         global $USER;
 
-        $this->curl->resetopt();
         $url = "{$this->baseurl}/createInvoice";
         $signature = hash('sha256', $this->merchantcode.$timestamp.$this->apikey);
 
@@ -97,12 +91,14 @@ class duitku_helper {
             'x-duitku-timestamp:' . $timestamp,
             'x-duitku-merchantcode:' . $this->merchantcode
         ];
-        $curlopt = [
-            'CURLOPT_RETURNTRANSFER' => true,
-            'CURLOPT_SSL_VERIFYPEER' => false,
-            'CURLOPT_HTTPHEADER' => $curloptheader
-        ];
-        $this->curl->setopt($curlopt);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $paramsstring);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $curloptheader);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         // Log outgoing Request.
         $eventarray = [
@@ -117,9 +113,9 @@ class duitku_helper {
         $this->log_request($eventarray);
 
         // Execute post.
-        $request = $this->curl->post($url, $paramsstring);
-        $httpcode = $this->curl->info['http_code'];
-        $headersize = $this->curl->info['header_size'];
+        $request = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $headersize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $header = substr($request, 0, $headersize);
 
         // Log incoming response.
@@ -159,17 +155,17 @@ class duitku_helper {
         $paramsstring = json_encode($params);
 
         // Setup curl.
-        $this->curl->resetopt();
-        $curlopt = [
-            'CURLOPT_RETURNTRANSFER' => true,
-            'CURLOPT_SSL_VERIFYPEER' => false
-        ];
-        $this->curl->setopt($curlopt);
-        $curloptheader = [
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $paramsstring);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             'Content-Length: ' . strlen($paramsstring)
-        ];
-        $this->curl->setHeader($curloptheader);
+            ]
+        );
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         // Log outgoing request.
         $eventarray = [
@@ -184,9 +180,9 @@ class duitku_helper {
         $this->log_request($eventarray);
 
         // Execute post.
-        $request = $this->curl->post($url, $paramsstring);
-        $httpcode = $this->curl->info['http_code'];
-        $headersize = $this->curl->info['header_size'];
+        $request = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $headersize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $header = substr($request, 0, $headersize);
 
         // Log incoming response.
