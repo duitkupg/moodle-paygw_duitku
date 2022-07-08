@@ -34,9 +34,8 @@ defined('MOODLE_INTERNAL') || die();
  */
 function paygw_duitku_before_footer() {
     global $USER, $DB;
-
     $enabledplugins = \core\plugininfo\paygw::get_enabled_plugins();
-    if (!empty($enabledplugins['duitku'])) {
+    if (array_key_exists('duitku', $enabledplugins)) {
         $params = [
             'userid' => (int)$USER->id,
             'payment_status' => duitku_status_codes::CHECK_STATUS_PENDING
