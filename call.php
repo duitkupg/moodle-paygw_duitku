@@ -28,6 +28,7 @@ use paygw_duitku\duitku_status_codes;
 use paygw_duitku\duitku_helper;
 
 require_once(__DIR__ . '/../../../config.php');
+require_once($CFG->libdir . '/filelib.php');
 require_login();
 
 $component = required_param('component', PARAM_ALPHANUMEXT);
@@ -134,7 +135,8 @@ $params = [
 ];
 $sql = 'SELECT * FROM {paygw_duitku} WHERE userid = :userid AND component = :component AND paymentarea = :paymentarea AND itemid = :itemid ORDER BY {paygw_duitku}.timestamp DESC';
 $existingdata = $DB->get_record_sql($sql, $params, 1);// Will return exactly 1 row. The newest transaction that was saved.
-$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantorderid, $environment);
+$ch = new curl();
+$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantorderid, $environment, $ch);
 $context = context_course::instance($course->id, MUST_EXIST);
 // If there are no existing transaction in the database then create a new one.
 if (empty($existingdata)) {
@@ -152,7 +154,7 @@ if (empty($existingdata)) {
 
 // Check for any previous transaction in duitku using the previous data.
 $prevmerchantorderid = $existingdata->merchant_order_id;
-$newduitkuhelper = new duitku_helper($merchantcode, $apikey, $prevmerchantorderid, $environment);
+$newduitkuhelper = new duitku_helper($merchantcode, $apikey, $prevmerchantorderid, $environment, $ch);
 $requestdata = $newduitkuhelper->check_transaction($context);
 $request = json_decode($requestdata['request']);
 $httpcode = $requestdata['httpCode'];

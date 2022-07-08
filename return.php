@@ -27,7 +27,7 @@ use paygw_duitku\duitku_helper;
 
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
-
+require_once($CFG->libdir . '/filelib.php');
 require_login();
 
 // Parameters sent from Duitku return response and return url at enrol.html.
@@ -71,7 +71,8 @@ if (is_enrolled($context, null, '', true)) {
 }
 // Somehow they aren't enrolled yet.
 // Log user return.
-$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantorderid, $environment);
+$curl = new curl();
+$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantorderid, $environment, $curl);
 $eventarray = [
     'context' => $context,
     'relateduserid' => $USER->id,

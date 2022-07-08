@@ -30,6 +30,7 @@ use paygw_duitku\duitku_status_codes;
 // Does not require login.
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
+require_once($CFG->libdir . '/filelib.php');
 
 // Keep out casual intruders.
 if (empty($_POST) or !empty($_GET)) {
@@ -95,7 +96,8 @@ if ($component == 'enrol_fee' && $paymentarea == 'fee') {
 $context = context_course::instance($courseid, MUST_EXIST);
 
 // Double check on transaction before continuing.
-$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantordeird, $environment);
+$curl = new curl();
+$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantordeird, $environment, $curl);
 $requestdata = $duitkuhelper->check_transaction($context);
 $response = json_decode($requestdata['request']);
 
