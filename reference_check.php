@@ -27,7 +27,6 @@ use paygw_duitku\duitku_helper;
 use paygw_duitku\duitku_status_codes;
 
 require('../../../config.php');
-require_once($CFG->libdir . '/filelib.php');
 require_login();
 
 $merchantorderid = required_param('merchantOrderId', PARAM_ALPHANUMEXT);;
@@ -47,8 +46,7 @@ if ($component == 'enrol_fee' && $paymentarea == 'fee') {
 }
 $context = context_course::instance($courseid, MUST_EXIST);
 
-$curl = new curl();
-$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantorderid, $environment, $curl);
+$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantorderid, $environment);
 $requestdata  = $duitkuhelper->check_transaction($context);
 $response = json_decode($requestdata['request']);
 $httpcode = $requestdata['httpCode'];

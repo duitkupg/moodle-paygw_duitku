@@ -64,14 +64,12 @@ class duitku_helper {
      * @param string    $apikey Duitku      API Key.
      * @param string    $merchantorderid    Customly genereted Merchant Order Id at call.php.
      * @param string    $environment        Environment string (sandbox or production).
-     * @param curl      $curl               Curl Moodle class.
      */
-    public function __construct(string $merchantcode, string $apikey, string $merchantorderid, string $environment, $curl) {
+    public function __construct(string $merchantcode, string $apikey, string $merchantorderid, string $environment) {
         $this->merchantcode = $merchantcode;
         $this->apikey = $apikey;
         $this->merchantorderid = $merchantorderid;
         $this->environment = $environment;
-        $this->curl = $curl;
         $this->baseurl = $environment === 'sandbox' ? 'https://api-sandbox.duitku.com/api/merchant' : 'https://api-prod.duitku.com/api/merchant';
     }
 
@@ -84,9 +82,11 @@ class duitku_helper {
      * @param \context_course   $context            Course context needed for request logging
      */
     public function create_transaction(string $paramsstring, string $timestamp, \context_course $context) {
-        global $USER;
+        global $USER, $CFG;
+        require_once($CFG->libdir . '/filelib.php');
 
-        $this->curl->resetopt();
+        $curl = new curl();
+        $curl->resetopt();
         $url = "{$this->baseurl}/createInvoice";
         $signature = hash('sha256', $this->merchantcode.$timestamp.$this->apikey);
 
@@ -102,7 +102,7 @@ class duitku_helper {
             'CURLOPT_SSL_VERIFYPEER' => false,
             'CURLOPT_HTTPHEADER' => $curloptheader
         ];
-        $this->curl->setopt($curlopt);
+        $curl->setopt($curlopt);
 
         // Log outgoing Request.
         $eventarray = [
@@ -117,9 +117,9 @@ class duitku_helper {
         $this->log_request($eventarray);
 
         // Execute post.
-        $request = $this->curl->post($url, $paramsstring);
-        $httpcode = $this->curl->info['http_code'];
-        $headersize = $this->curl->info['header_size'];
+        $request = $curl->post($url, $paramsstring);
+        $httpcode = $curl->info['http_code'];
+        $headersize = $curl->info['header_size'];
         $header = substr($request, 0, $headersize);
 
         // Log incoming response.
@@ -147,7 +147,8 @@ class duitku_helper {
      * @param \context_course   $context    Course context needed for request logging
      */
     public function check_transaction(\context_course $context) {
-        global $USER;
+        global $USER, $CFG;
+        require_once($CFG->libdir . '/filelib.php');
 
         $url = "{$this->baseurl}/transactionStatus";
         $signature = md5($this->merchantcode . $this->merchantorderid . $this->apikey);
@@ -159,17 +160,18 @@ class duitku_helper {
         $paramsstring = json_encode($params);
 
         // Setup curl.
-        $this->curl->resetopt();
+        $curl = new curl();
+        $curl->resetopt();
         $curlopt = [
             'CURLOPT_RETURNTRANSFER' => true,
             'CURLOPT_SSL_VERIFYPEER' => false
         ];
-        $this->curl->setopt($curlopt);
+        $curl->setopt($curlopt);
         $curloptheader = [
             'Content-Type: application/json',
             'Content-Length: ' . strlen($paramsstring)
         ];
-        $this->curl->setHeader($curloptheader);
+        $curl->setHeader($curloptheader);
 
         // Log outgoing request.
         $eventarray = [
@@ -184,9 +186,9 @@ class duitku_helper {
         $this->log_request($eventarray);
 
         // Execute post.
-        $request = $this->curl->post($url, $paramsstring);
-        $httpcode = $this->curl->info['http_code'];
-        $headersize = $this->curl->info['header_size'];
+        $request = $curl->post($url, $paramsstring);
+        $httpcode = $curl->info['http_code'];
+        $headersize = $curl->info['header_size'];
         $header = substr($request, 0, $headersize);
 
         // Log incoming response.

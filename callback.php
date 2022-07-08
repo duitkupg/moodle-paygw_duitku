@@ -96,8 +96,7 @@ if ($component == 'enrol_fee' && $paymentarea == 'fee') {
 $context = context_course::instance($courseid, MUST_EXIST);
 
 // Double check on transaction before continuing.
-$curl = new curl();
-$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantordeird, $environment, $curl);
+$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantordeird, $environment);
 $requestdata = $duitkuhelper->check_transaction($context);
 $response = json_decode($requestdata['request']);
 
