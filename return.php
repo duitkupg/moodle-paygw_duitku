@@ -87,9 +87,11 @@ $PAGE->set_url($destination);
 $a = new stdClass();
 $a->teacher = get_string('defaultcourseteacher'); // Variable name must be $a, according to Moodle.
 $a->fullname = $fullname;// I have tried using other variable name than $a and it was not recognized.
+$a->reference = $referenceurl;
 $response = (object)[
-    'courseName' => $course->fullname,
-    'referenceUrl' => $referenceurl
+    'return_header' => get_string('return_header', 'paygw_duitku'),
+    'return_sub_header' => get_string('return_sub_header', 'paygw_duitku', $a),
+    'return_body' => get_string('return_body', 'paygw_duitku', $a)
 ];
 
 // Output reason why user has not been enrolled yet.

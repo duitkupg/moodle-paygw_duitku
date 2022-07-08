@@ -52,3 +52,7 @@ $string['log_request_transaction_response'] = 'Duitku response to Request Transa
 $string['log_check_transaction'] = 'Checking transaction to Duitku';
 $string['log_check_transaction_response'] = 'Duitku respose for Checking Transaction';
 $string['log_callback'] = 'Received Callback from Duitku';
+
+$string['return_header'] = 'Pending Transaction';
+$string['return_sub_header'] = 'Course name : {$a->fullname}';
+$string['return_body'] = 'If you have already paid, wait a few moments then check again if you are already enrolled. <br /> We kept your payment <a href="{$a->reference}">here</a> in case you would like to return.';
