@@ -31,32 +31,26 @@ use paygw_duitku\duitku_status_codes;
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
 
-// Keep out casual intruders.
-if (empty($_POST) or !empty($_GET)) {
-    http_response_code(400);
-    throw new moodle_exception('invalidrequest', 'core_error');
-}
-
-$merchantcode = isset($_POST['merchantCode']) ? $_POST['merchantCode'] : null;
-$amount = isset($_POST['amount']) ? $_POST['amount'] : null;
-$merchantordeird = isset($_POST['merchantOrderId']) ? $_POST['merchantOrderId'] : null;
-$productdetail = isset($_POST['productDetail']) ? $_POST['productDetail'] : null;
-$additionalparam = isset($_POST['additionalParam']) ? $_POST['additionalParam'] : null;
-$paymentcode = isset($_POST['paymentCode']) ? $_POST['paymentCode'] : null;
-$resultcode = isset($_POST['resultCode']) ? $_POST['resultCode'] : null;
-$merchantuserid = isset($_POST['merchantUserId']) ? $_POST['merchantUserId'] : null;
-$reference = isset($_POST['reference']) ? $_POST['reference'] : null;
-$signature = isset($_POST['signature']) ? $_POST['signature'] : null;
+$merchantcode = required_param('merchantCode', PARAM_TEXT);
+$amount = required_param('merchantOrderId', PARAM_INT);
+$merchantorderid = required_param('merchantOrderId', PARAM_TEXT);
+$productdetail = required_param('productDetail', PARAM_TEXT);
+$additionalparam = optional_param('additionalParam', '', PARAM_TEXT);
+$paymentcode = required_param('paymentCode', PARAM_TEXT);
+$resultcode = required_param('resultCode', PARAM_TEXT);
+$merchantuserid = required_param('merchantUserId', PARAM_TEXT);
+$reference = required_param('reference', PARAM_TEXT);
+$signature = required_param('signature', PARAM_TEXT);
 
 
 // Making sure that merchant order id is in the correct format.
-$custom = explode('-', $merchantordeird);
+$custom = explode('-', $merchantorderid);
 if (empty($custom) || count($custom) < 5) {
     throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Invalid value of the request param: custom');
 }
 
 // Make sure all of the parameters are there.
-if (empty($merchantcode) || empty($amount) || empty($merchantordeird) || empty($signature)) {
+if (empty($merchantcode) || empty($amount) || empty($merchantorderid) || empty($signature)) {
     throw new moodle_exception('invalidrequest', 'core_error', '', null, 'Bad Parameter');
 }
 
@@ -77,14 +71,14 @@ $payable = helper::get_payable($component, $paymentarea, $itemid);
 $apikey = $config->apikey;
 $expiryperiod = $config->expiry;
 $environment = $config->environment;
-$params = $merchantcode . $amount . $merchantordeird . $apikey;
+$params = $merchantcode . $amount . $merchantorderid . $apikey;
 $calcsignature = md5($params);
 if ($signature != $calcsignature) {
     throw new Exception('Bad Signature');
 }
 
 $referenceurl = "{$CFG->wwwroot}/payment/gateway/duitku/reference_check.php?";
-$referenceurl .= "component={$component}&paymentarea={$paymentarea}&itemid={$itemid}&merchantOrderId={$merchantordeird}&description={$productdetail}";
+$referenceurl .= "component={$component}&paymentarea={$paymentarea}&itemid={$itemid}&merchantOrderId={$merchantorderid}&description={$productdetail}";
 
 $courseid = ""; // Initialize course outside of if scope.
 if ($component == 'enrol_fee' && $paymentarea == 'fee') {
@@ -95,7 +89,7 @@ if ($component == 'enrol_fee' && $paymentarea == 'fee') {
 $context = context_course::instance($courseid, MUST_EXIST);
 
 // Double check on transaction before continuing.
-$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantordeird, $environment);
+$duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantorderid, $environment);
 $requestdata = $duitkuhelper->check_transaction($context);
 $response = json_decode($requestdata['request']);
 
@@ -112,7 +106,7 @@ $data->itemid = $itemid;
 $data->reference = $reference;
 $data->timestamp = $timestamp;
 $data->signature = $signature;
-$data->merchant_order_id = $merchantordeird;
+$data->merchant_order_id = $merchantorderid;
 $data->accountid = $payable->get_account_id();
 $data->payment_status = $resultcode;
 $data->pending_reason = get_string('log_callback', 'paygw_duitku');
@@ -142,7 +136,7 @@ $eventarray = [
         'Log Detail' => get_string('log_callback', 'paygw_duitku'),
         'merchantCode' => $merchantcode,
         'amount' => $amount,
-        'merchantOrderId' => $merchantordeird,
+        'merchantOrderId' => $merchantorderid,
         'productDetail' => $productdetail,
         'paymentCode' => $paymentcode,
         'resultCode' => $resultcode,
