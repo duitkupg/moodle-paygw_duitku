@@ -34,18 +34,20 @@ defined('MOODLE_INTERNAL') || die();
  */
 function paygw_duitku_before_footer() {
     global $USER, $DB;
-
-    $params = [
-        'userid' => (int)$USER->id,
-        'payment_status' => duitku_status_codes::CHECK_STATUS_PENDING
-    ];
-    $pendingtransactions = $DB->get_records_sql('SELECT * FROM {paygw_duitku} WHERE userid = :userid AND payment_status = :payment_status', $params);
-
-    foreach ($pendingtransactions as $transaction) {
-        $selectstatement = 'SELECT * FROM {course} INNER JOIN {enrol} ON {enrol}.courseid = {course}.id WHERE {enrol}.id = :itemid';
-        $params = ['itemid' => $transaction->itemid];
-        $course = $DB->get_records_sql($selectstatement, $params);
-        $message = "You have a pending payment for the '{$course[$transaction->itemid]->fullname}' course <a href='{$transaction->referenceurl}'>here</a>";
-        \core\notification::add($message, \core\output\notification::NOTIFY_WARNING);
+    $enabledplugins = \core\plugininfo\paygw::get_enabled_plugins();
+    if (array_key_exists('duitku', $enabledplugins)) {
+        $params = [
+            'userid' => (int)$USER->id,
+            'payment_status' => duitku_status_codes::CHECK_STATUS_PENDING
+        ];
+        $pendingtransactions = $DB->get_records_sql('SELECT * FROM {paygw_duitku} WHERE userid = :userid AND payment_status = :payment_status', $params);
+    
+        foreach ($pendingtransactions as $transaction) {
+            $selectstatement = 'SELECT * FROM {course} INNER JOIN {enrol} ON {enrol}.courseid = {course}.id WHERE {enrol}.id = :itemid';
+            $params = ['itemid' => $transaction->itemid];
+            $course = $DB->get_records_sql($selectstatement, $params);
+            $message = "You have a pending payment for the '{$course[$transaction->itemid]->fullname}' course <a href='{$transaction->referenceurl}'>here</a>";
+            \core\notification::add($message, \core\output\notification::NOTIFY_WARNING);
+        }
     }
 }
