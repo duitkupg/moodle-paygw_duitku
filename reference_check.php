@@ -27,7 +27,6 @@ use paygw_duitku\duitku_helper;
 use paygw_duitku\duitku_status_codes;
 
 require('../../../config.php');
-
 require_login();
 
 $merchantorderid = required_param('merchantOrderId', PARAM_ALPHANUMEXT);;

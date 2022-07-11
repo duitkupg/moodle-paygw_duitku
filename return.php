@@ -27,7 +27,6 @@ use paygw_duitku\duitku_helper;
 
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
-
 require_login();
 
 // Parameters sent from Duitku return response and return url at enrol.html.

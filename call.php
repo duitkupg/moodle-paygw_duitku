@@ -190,7 +190,27 @@ if ($existingdata->expiryperiod < $timestamp) {
 }
 
 // If Duitku does not recognize the transaction but there is an existing data or transaction failed.
-if ($httpcode === 400 || $request->statusCode === duitku_status_codes::CHECK_STATUS_PENDING) {
+if ($httpcode === 400) {
+    $params['merchantOrderId'] = $merchantorderid;
+    $paramstring = json_encode($params);
+    $requestdata = $newduitkuhelper->create_transaction($paramstring, $timestamp, $context);
+    $request = json_decode($requestdata['request']);
+    $httpcode = $requestdata['httpCode'];
+    if ($httpcode == 200) {
+        // Insert to database to be reused later.
+        $paygwdata->id = $existingdata->id;
+        $paygwdata->reference = $request->reference;
+        $paygwdata->timestamp = $timestamp;
+        $paygwdata->expiryperiod = $timestamp + ($expiryperiod * $minutestomilli);// Converts expiry period to milliseconds.
+        $DB->update_record('paygw_duitku', $paygwdata);
+        header('location: '. $request->paymentUrl);die;
+    } else {
+        redirect("{$CFG->wwwroot}/enrol/index.php?id={$courseid}", get_string('call_error', 'paygw_duitku'));
+    }
+}
+
+// Seperate this condition in httpcode is error 400 which will result in undefined property.
+if ($request->statusCode === duitku_status_codes::CHECK_STATUS_PENDING) {
     $redirecturl = $environment === 'sandbox' ? 'https://app-sandbox.duitku.com/' : 'https://app-prod.duitku.com/';
     $redirecturl .= 'redirect_checkout?reference=' . $existingdata->reference;
     header('location: '. $redirecturl);die;
@@ -216,6 +236,7 @@ if ($request->statusCode === duitku_status_codes::CHECK_STATUS_CANCELED) {
     $httpcode = $requestdata['httpCode'];
     if ($httpcode == 200) {
         // Insert to database to be reused later.
+        $paygwdata->merchant_order_id = $prevmerchantorderid; // Make sure to use the old merchant order id.
         $paygwdata->id = $existingdata->id;
         $paygwdata->reference = $request->reference;
         $paygwdata->timestamp = $timestamp;

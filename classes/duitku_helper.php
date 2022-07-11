@@ -60,7 +60,7 @@ class duitku_helper {
      * @param string    $merchantcode       Duitku Merchant Code
      * @param string    $apikey Duitku       API Key.
      * @param string    $merchantorderid    Customly genereted Merchant Order Id at call.php.
-     * @param string    $environment       Environment string (sandbox or production).
+     * @param string    $environment        Environment string (sandbox or production).
      */
     public function __construct(string $merchantcode, string $apikey, string $merchantorderid, string $environment) {
         $this->merchantcode = $merchantcode;
@@ -79,8 +79,11 @@ class duitku_helper {
      * @param \context_course   $context            Course context needed for request logging
      */
     public function create_transaction(string $paramsstring, string $timestamp, \context_course $context) {
-        global $USER;
+        global $USER, $CFG;
+        require_once($CFG->libdir . '/filelib.php');
 
+        $curl = new curl();
+        $curl->resetopt();
         $url = "{$this->baseurl}/createInvoice";
         $signature = hash('sha256', $this->merchantcode.$timestamp.$this->apikey);
 
@@ -91,14 +94,12 @@ class duitku_helper {
             'x-duitku-timestamp:' . $timestamp,
             'x-duitku-merchantcode:' . $this->merchantcode
         ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $paramsstring);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $curloptheader);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $curlopt = [
+            'CURLOPT_RETURNTRANSFER' => true,
+            'CURLOPT_SSL_VERIFYPEER' => false,
+            'CURLOPT_HTTPHEADER' => $curloptheader
+        ];
+        $curl->setopt($curlopt);
 
         // Log outgoing Request.
         $eventarray = [
@@ -113,9 +114,9 @@ class duitku_helper {
         $this->log_request($eventarray);
 
         // Execute post.
-        $request = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $headersize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $request = $curl->post($url, $paramsstring);
+        $httpcode = $curl->info['http_code'];
+        $headersize = $curl->info['header_size'];
         $header = substr($request, 0, $headersize);
 
         // Log incoming response.
@@ -143,7 +144,8 @@ class duitku_helper {
      * @param \context_course   $context    Course context needed for request logging
      */
     public function check_transaction(\context_course $context) {
-        global $USER;
+        global $USER, $CFG;
+        require_once($CFG->libdir . '/filelib.php');
 
         $url = "{$this->baseurl}/transactionStatus";
         $signature = md5($this->merchantcode . $this->merchantorderid . $this->apikey);
@@ -155,17 +157,18 @@ class duitku_helper {
         $paramsstring = json_encode($params);
 
         // Setup curl.
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $paramsstring);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        $curl = new curl();
+        $curl->resetopt();
+        $curlopt = [
+            'CURLOPT_RETURNTRANSFER' => true,
+            'CURLOPT_SSL_VERIFYPEER' => false
+        ];
+        $curl->setopt($curlopt);
+        $curloptheader = [
             'Content-Type: application/json',
             'Content-Length: ' . strlen($paramsstring)
-            ]
-        );
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        ];
+        $curl->setHeader($curloptheader);
 
         // Log outgoing request.
         $eventarray = [
@@ -180,9 +183,9 @@ class duitku_helper {
         $this->log_request($eventarray);
 
         // Execute post.
-        $request = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $headersize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $request = $curl->post($url, $paramsstring);
+        $httpcode = $curl->info['http_code'];
+        $headersize = $curl->info['header_size'];
         $header = substr($request, 0, $headersize);
 
         // Log incoming response.
