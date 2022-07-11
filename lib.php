@@ -41,7 +41,6 @@ function paygw_duitku_before_footer() {
             'payment_status' => duitku_status_codes::CHECK_STATUS_PENDING
         ];
         $pendingtransactions = $DB->get_records_sql('SELECT * FROM {paygw_duitku} WHERE userid = :userid AND payment_status = :payment_status', $params);
-    
         foreach ($pendingtransactions as $transaction) {
             $selectstatement = 'SELECT * FROM {course} INNER JOIN {enrol} ON {enrol}.courseid = {course}.id WHERE {enrol}.id = :itemid';
             $params = ['itemid' => $transaction->itemid];
