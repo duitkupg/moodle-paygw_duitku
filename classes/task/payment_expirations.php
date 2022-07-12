@@ -55,7 +55,7 @@ class payment_expirations extends \core\task\scheduled_task {
             'payment_status' => duitku_status_codes::CHECK_STATUS_PENDING
         ];
         $sql = 'SELECT * FROM {paygw_duitku} WHERE payment_status = :payment_status';
-        $transactions = $DB->get_record_sql($sql, $params);// Will return exactly 1 row.
+        $transactions = $DB->get_records_sql($sql, $params);// Will return exactly 1 row.
         foreach ($transactions as $transaction) {
             $expiryperiod = (int)$transaction->expiryperiod;
             if ($expiryperiod < round(microtime(true) * duitku_mathematical_constants::ONE_SECOND_TO_MILLISECONDS)) {
