@@ -24,6 +24,8 @@
 
 namespace paygw_duitku;
 
+use curl;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
