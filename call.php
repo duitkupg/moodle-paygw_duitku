@@ -57,7 +57,7 @@ $merchantcode = $config->merchantcode;
 $apikey = $config->apikey;
 $expiryperiod = $config->expiry;
 $timestamp = (string)round(microtime(true) * paygw_duitku\duitku_mathematical_constants::ONE_SECOND_TO_MILLISECONDS);
-$merchantorderid = $component . '-' . $paymentarea . '-' .  $itemid . '-' . $USER->id . '-' . $timestamp;
+$merchantorderid = $timestamp; // Merchant Order Id is now based on timestamp
 $callbackurl = "{$CFG->wwwroot}/payment/gateway/duitku/callback.php";
 $returnparam = "component={$component}&paymentarea={$paymentarea}&itemid={$itemid}&description={$description}";
 $returnurl = "{$CFG->wwwroot}/payment/gateway/duitku/return.php?" . $returnparam; // Moodle does not allow more than 180 chars.
@@ -100,7 +100,8 @@ $params = [
     'customerDetail' => $customerdetail,
     'callbackUrl' => $callbackurl,
     'returnUrl' => $returnurl,
-    'expiryPeriod' => (int)$expiryperiod
+    'expiryPeriod' => (int)$expiryperiod,
+    'additionalParam' => $component . '-' . $paymentarea . '-' .  $itemid . '-' . $USER->id
 ];
 $paramstring = json_encode($params);
 
@@ -108,7 +109,7 @@ $paramstring = json_encode($params);
 $payable = helper::get_payable($component, $paymentarea, $itemid);
 $signature = md5($merchantcode . $merchantorderid . $apikey);
 $referenceurl = "{$CFG->wwwroot}/payment/gateway/duitku/reference_check.php?";
-$referenceurl .= $returnparam . "&merchantOrderId={$merchantorderid}";
+$referenceurl .= $returnparam;
 $minutestomilli = duitku_mathematical_constants::ONE_MINUTE_TO_SECONDS * duitku_mathematical_constants::ONE_SECOND_TO_MILLISECONDS;
 
 $paygwdata = new stdClass();
@@ -124,7 +125,6 @@ $paygwdata->payment_status = duitku_status_codes::CHECK_STATUS_PENDING;
 $paygwdata->pending_reason = get_string('pending_message', 'paygw_duitku');
 $paygwdata->timeupdated = round(microtime(true) * duitku_mathematical_constants::ONE_SECOND_TO_MILLISECONDS);
 $paygwdata->expiryperiod = $timestamp + ($expiryperiod * $minutestomilli);// This converts expiry periods to milliseconds.
-$paygwdata->referenceurl = $referenceurl;
 
 $params = [
     'userid' => $USER->id,
@@ -143,6 +143,7 @@ if (empty($existingdata)) {
     $httpcode = $requestdata['httpCode'];
     if ($httpcode == 200) {
         $paygwdata->reference = $request->reference;// Reference only received after successful request transaction.
+        $paygwdata->referenceurl = $referenceurl  . "&merchantOrderId={$merchantorderid}";
         $DB->insert_record('paygw_duitku', $paygwdata);
         header('location: '. $request->paymentUrl);die;
     } else {
@@ -170,7 +171,8 @@ if ($existingdata->expiryperiod < $timestamp) {
         'customerDetail' => $customerdetail,
         'callbackUrl' => $callbackurl,
         'returnUrl' => $returnurl,
-        'expiryPeriod' => (int)$expiryperiod
+        'expiryPeriod' => (int)$expiryperiod,
+        'additionalParam' => $component . '-' . $paymentarea . '-' .  $itemid . '-' . $USER->id
     ];
     $paramstring = json_encode($params);
     $requestdata = $newduitkuhelper->create_transaction($paramstring, $timestamp, $context);
@@ -179,8 +181,10 @@ if ($existingdata->expiryperiod < $timestamp) {
     if ($httpcode == 200) {
         // Insert to database to be reused later.
         $paygwdata->id = $existingdata->id;
+        $paygwdata->merchant_order_id = $prevmerchantorderid; // Make sure to use the old merchant order id.
         $paygwdata->reference = $request->reference;
         $paygwdata->timestamp = $timestamp;
+        $paygwdata->referenceurl = $referenceurl  . "&merchantOrderId={$prevmerchantorderid}";
         $paygwdata->expiryperiod = $timestamp + ($expiryperiod * $minutestomilli);// Converts expiry period to milliseconds.
         $DB->update_record('paygw_duitku', $paygwdata);
         header('location: '. $request->paymentUrl);die;
@@ -191,7 +195,20 @@ if ($existingdata->expiryperiod < $timestamp) {
 
 // If Duitku does not recognize the transaction but there is an existing data or transaction failed.
 if ($httpcode === 400) {
-    $params['merchantOrderId'] = $merchantorderid;
+    $params = [
+        'paymentAmount' => $cost,
+        'merchantOrderId' => $prevmerchantorderid,
+        'productDetails' => $description,
+        'customerVaName' => $USER->username,
+        'merchantUserInfo' => $USER->username,
+        'email' => $USER->email,
+        'itemDetails' => $itemdetails,
+        'customerDetail' => $customerdetail,
+        'callbackUrl' => $callbackurl,
+        'returnUrl' => $returnurl,
+        'expiryPeriod' => (int)$expiryperiod,
+        'additionalParam' => $component . '-' . $paymentarea . '-' .  $itemid . '-' . $USER->id
+    ];
     $paramstring = json_encode($params);
     $requestdata = $newduitkuhelper->create_transaction($paramstring, $timestamp, $context);
     $request = json_decode($requestdata['request']);
@@ -199,8 +216,10 @@ if ($httpcode === 400) {
     if ($httpcode == 200) {
         // Insert to database to be reused later.
         $paygwdata->id = $existingdata->id;
+        $paygwdata->merchant_order_id = $prevmerchantorderid; // Make sure to use the old merchant order id.
         $paygwdata->reference = $request->reference;
         $paygwdata->timestamp = $timestamp;
+        $paygwdata->referenceurl = $referenceurl  . "&merchantOrderId={$prevmerchantorderid}";
         $paygwdata->expiryperiod = $timestamp + ($expiryperiod * $minutestomilli);// Converts expiry period to milliseconds.
         $DB->update_record('paygw_duitku', $paygwdata);
         header('location: '. $request->paymentUrl);die;
@@ -228,7 +247,8 @@ if ($request->statusCode === duitku_status_codes::CHECK_STATUS_CANCELED) {
         'customerDetail' => $customerdetail,
         'callbackUrl' => $callbackurl,
         'returnUrl' => $returnurl,
-        'expiryPeriod' => (int)$expiryperiod
+        'expiryPeriod' => (int)$expiryperiod,
+        'additionalParam' => $component . '-' . $paymentarea . '-' .  $itemid . '-' . $USER->id
     ];
     $paramstring = json_encode($params);
     $requestdata = $newduitkuhelper->create_transaction($paramstring, $timestamp, $context);
@@ -240,6 +260,7 @@ if ($request->statusCode === duitku_status_codes::CHECK_STATUS_CANCELED) {
         $paygwdata->id = $existingdata->id;
         $paygwdata->reference = $request->reference;
         $paygwdata->timestamp = $timestamp;
+        $paygwdata->referenceurl = $referenceurl  . "&merchantOrderId={$prevmerchantorderid}";
         $paygwdata->expiryperiod = $timestamp + ($expiryperiod * $minutestomilli);// Converts expiry period to milliseconds.
         $DB->update_record('paygw_duitku', $paygwdata);
         header('location: '. $request->paymentUrl);die;
@@ -249,6 +270,21 @@ if ($request->statusCode === duitku_status_codes::CHECK_STATUS_CANCELED) {
 }
 
 if ($request->statusCode === duitku_status_codes::CHECK_STATUS_SUCCESS) {
+    $params = [
+        'paymentAmount' => $cost,
+        'merchantOrderId' => $merchantorderid,
+        'productDetails' => $description,
+        'customerVaName' => $USER->username,
+        'merchantUserInfo' => $USER->username,
+        'email' => $USER->email,
+        'itemDetails' => $itemdetails,
+        'customerDetail' => $customerdetail,
+        'callbackUrl' => $callbackurl,
+        'returnUrl' => $returnurl,
+        'expiryPeriod' => (int)$expiryperiod,
+        'additionalParam' => $component . '-' . $paymentarea . '-' .  $itemid . '-' . $USER->id
+    ];
+    $paramstring = json_encode($params);
     // If previous transaction is successful use a new merchantOrderId.
     $requestdata = $duitkuhelper->create_transaction($paramstring, $timestamp, $context);
     $request = json_decode($requestdata['request']);
@@ -256,6 +292,7 @@ if ($request->statusCode === duitku_status_codes::CHECK_STATUS_SUCCESS) {
     if ($httpcode == 200) {
         // Insert to database to be reused later.
         $paygwdata->reference = $request->reference;
+        $paygwdata->referenceurl = $referenceurl  . "&merchantOrderId={$merchantorderid}";
         $DB->insert_record('paygw_duitku', $paygwdata);
 
         header('location: '. $request->paymentUrl);die;
