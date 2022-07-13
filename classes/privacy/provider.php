@@ -41,7 +41,7 @@ class provider implements
         // Duitku Stores user data
         \core_privacy\local\metadata\provider,
 
-        // The paypal enrolment plugin contains user's transactions.
+        // The Duitku enrolment plugin contains user's transactions.
         \core_privacy\local\request\plugin\provider,
 
         // This plugin is capable of determining which users have data within it.
