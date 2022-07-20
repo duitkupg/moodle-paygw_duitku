@@ -194,7 +194,7 @@ if ($existingdata->expiryperiod < $timestamp) {
 }
 
 // If Duitku does not recognize the transaction but there is an existing data or transaction failed.
-if ($httpcode === 400) {
+if ($httpcode !== 200) {
     $params = [
         'paymentAmount' => $cost,
         'merchantOrderId' => $prevmerchantorderid,
