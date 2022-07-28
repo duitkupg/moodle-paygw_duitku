@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 // Reference https://docs.moodle.org/dev/version.php.
 
 $plugin->version    = 2022051805;
-$plugin->requires   = 2015111600; // Moodle Version 3.0 (could change depending if not supported).
+$plugin->requires   = 2021051700; // Requires Moodle Version 3.11
 $plugin->maturity   = MATURITY_STABLE;
 $plugin->release    = '1.0.0';
 $plugin->component  = 'paygw_duitku';
