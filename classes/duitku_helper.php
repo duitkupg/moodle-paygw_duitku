@@ -213,4 +213,26 @@ class duitku_helper {
         $event = \paygw_duitku\event\duitku_request_log::create($eventarray);
         $event->trigger();
     }
+
+    /**
+     * Sends a pending payment message to students if requesting a transaction is successful
+     * @param object $a Object used when getting the string for pending payment message
+     */
+    public function send_pending_payment_message($a) {
+        global $USER;
+
+        $eventdata = new \core\message\message();
+        $eventdata->courseid          = $a->courseid;
+        $eventdata->modulename        = 'moodle';
+        $eventdata->component         = 'paygw_duitku';
+        $eventdata->name              = 'pending_payment';
+        $eventdata->userfrom          = \core_user::get_noreply_user();
+        $eventdata->userto            = $USER->id;
+        $eventdata->subject           = "Moodle: Duitku Pending Payment";
+        $eventdata->fullmessage       = get_string('messageprovider:pending_payment_body', 'paygw_duitku', $a);
+        $eventdata->fullmessageformat = FORMAT_PLAIN;
+        $eventdata->fullmessagehtml   = get_string('messageprovider:pending_payment_body', 'paygw_duitku', $a);
+        $eventdata->smallmessage      = get_string('pending_payment_small', 'paygw_duitku');
+        message_send($eventdata);
+    }
 }

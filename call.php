@@ -136,6 +136,10 @@ $sql = 'SELECT * FROM {paygw_duitku} WHERE userid = :userid AND component = :com
 $existingdata = $DB->get_record_sql($sql, $params, 1);// Will return exactly 1 row. The newest transaction that was saved.
 $duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantorderid, $environment);
 $context = context_course::instance($course->id, MUST_EXIST);
+// Preparing data for the message sender 
+$a = new stdClass();
+$a->courseid = $course->id;
+$a->fullname = $course->fullname;
 // If there are no existing transaction in the database then create a new one.
 if (empty($existingdata)) {
     $requestdata = $duitkuhelper->create_transaction($paramstring, $timestamp, $context);
@@ -143,7 +147,10 @@ if (empty($existingdata)) {
     $httpcode = $requestdata['httpCode'];
     if ($httpcode == 200) {
         $paygwdata->reference = $request->reference;// Reference only received after successful request transaction.
+        $paygwdata->referenceurl = $referenceurl  . "&merchantOrderId={$merchantorderid}";
+        $a->referenceurl = $paygwdata->referenceurl;
         $DB->insert_record('paygw_duitku', $paygwdata);
+        $duitkuhelper->send_pending_payment_message($a);
         header('location: '. $request->paymentUrl);die;
     } else {
         redirect("{$CFG->wwwroot}/enrol/index.php?id={$courseid}", get_string('call_error', 'paygw_duitku'));
@@ -183,6 +190,7 @@ if ($existingdata->expiryperiod < $timestamp) {
         $paygwdata->timestamp = $timestamp;
         $paygwdata->expiryperiod = $timestamp + ($expiryperiod * $minutestomilli);// Converts expiry period to milliseconds.
         $DB->update_record('paygw_duitku', $paygwdata);
+        $a->referenceurl = $paygwdata->referenceurl;
         header('location: '. $request->paymentUrl);die;
     } else {
         redirect("{$CFG->wwwroot}/enrol/index.php?id={$courseid}", get_string('call_error', 'paygw_duitku'));
@@ -190,7 +198,43 @@ if ($existingdata->expiryperiod < $timestamp) {
 }
 
 // If Duitku does not recognize the transaction but there is an existing data or transaction failed.
-if ($httpcode === 400 || $request->statusCode === duitku_status_codes::CHECK_STATUS_PENDING) {
+if ($httpcode !== 200) {
+    $params = [
+        'paymentAmount' => $cost,
+        'merchantOrderId' => $prevmerchantorderid,
+        'productDetails' => $description,
+        'customerVaName' => $USER->username,
+        'merchantUserInfo' => $USER->username,
+        'email' => $USER->email,
+        'itemDetails' => $itemdetails,
+        'customerDetail' => $customerdetail,
+        'callbackUrl' => $callbackurl,
+        'returnUrl' => $returnurl,
+        'expiryPeriod' => (int)$expiryperiod,
+        'additionalParam' => $component . '-' . $paymentarea . '-' .  $itemid . '-' . $USER->id
+    ];
+    $paramstring = json_encode($params);
+    $requestdata = $newduitkuhelper->create_transaction($paramstring, $timestamp, $context);
+    $request = json_decode($requestdata['request']);
+    $httpcode = $requestdata['httpCode'];
+    if ($httpcode == 200) {
+        // Insert to database to be reused later.
+        $paygwdata->id = $existingdata->id;
+        $paygwdata->merchant_order_id = $prevmerchantorderid; // Make sure to use the old merchant order id.
+        $paygwdata->reference = $request->reference;
+        $paygwdata->timestamp = $timestamp;
+        $paygwdata->referenceurl = $referenceurl  . "&merchantOrderId={$prevmerchantorderid}";
+        $paygwdata->expiryperiod = $timestamp + ($expiryperiod * $minutestomilli);// Converts expiry period to milliseconds.
+        $DB->update_record('paygw_duitku', $paygwdata);
+        $a->referenceurl = $paygwdata->referenceurl;
+        header('location: '. $request->paymentUrl);die;
+    } else {
+        redirect("{$CFG->wwwroot}/enrol/index.php?id={$courseid}", get_string('call_error', 'paygw_duitku'));
+    }
+}
+
+// Seperate this condition in httpcode is error 400 which will result in undefined property.
+if ($request->statusCode === duitku_status_codes::CHECK_STATUS_PENDING) {
     $redirecturl = $environment === 'sandbox' ? 'https://app-sandbox.duitku.com/' : 'https://app-prod.duitku.com/';
     $redirecturl .= 'redirect_checkout?reference=' . $existingdata->reference;
     header('location: '. $redirecturl);die;
@@ -221,6 +265,7 @@ if ($request->statusCode === duitku_status_codes::CHECK_STATUS_CANCELED) {
         $paygwdata->timestamp = $timestamp;
         $paygwdata->expiryperiod = $timestamp + ($expiryperiod * $minutestomilli);// Converts expiry period to milliseconds.
         $DB->update_record('paygw_duitku', $paygwdata);
+        $a->referenceurl = $paygwdata->referenceurl;
         header('location: '. $request->paymentUrl);die;
     } else {
         redirect("{$CFG->wwwroot}/enrol/index.php?id={$courseid}", get_string('call_error', 'paygw_duitku'));
@@ -236,7 +281,8 @@ if ($request->statusCode === duitku_status_codes::CHECK_STATUS_SUCCESS) {
         // Insert to database to be reused later.
         $paygwdata->reference = $request->reference;
         $DB->insert_record('paygw_duitku', $paygwdata);
-
+        $a->referenceurl = $paygwdata->referenceurl;
+        $duitkuhelper->send_pending_payment_message($a);
         header('location: '. $request->paymentUrl);die;
     } else {
         redirect("{$CFG->wwwroot}/enrol/index.php?id={$courseid}", get_string('call_error', 'paygw_duitku'));
