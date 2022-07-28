@@ -136,7 +136,7 @@ $sql = 'SELECT * FROM {paygw_duitku} WHERE userid = :userid AND component = :com
 $existingdata = $DB->get_record_sql($sql, $params, 1);// Will return exactly 1 row. The newest transaction that was saved.
 $duitkuhelper = new duitku_helper($merchantcode, $apikey, $merchantorderid, $environment);
 $context = context_course::instance($course->id, MUST_EXIST);
-// Preparing data for the message sender 
+// Preparing data for the message sender.
 $a = new stdClass();
 $a->courseid = $course->id;
 $a->fullname = $course->fullname;
