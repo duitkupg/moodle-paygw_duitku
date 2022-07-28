@@ -22,43 +22,43 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['apikey'] = 'API Key';
-$string['apikey_help'] = 'API Key located in the Project website';
+$string['apikey'] = 'API key';
+$string['apikey_help'] = 'API key located in the project website';
 $string['course_error'] = 'Course not found';
 $string['call_error'] = 'An error has occured when requesting transaction. Please try again or contact the site admin';
 $string['environment'] = 'Environment';
 $string['environment_help'] = 'Configure Duitku endpoint to be sandbox or production';
-$string['expiry'] = 'Expiry Period';
+$string['expiry'] = 'Expiry period';
 $string['expiry_help'] = 'Expiry period for each transaction. Units set in minutes';
-$string['expired_transaction'] = 'Expired Transaction';
-$string['merchantcode'] = 'Merchant Code';
-$string['merchantcode_help'] = 'Merchant code located in the Project website';
+$string['expired_transaction'] = 'Expired transaction';
+$string['merchantcode'] = 'Merchant code';
+$string['merchantcode_help'] = 'Merchant code located in the project website';
 $string['gatewayname'] = 'Duitku';
-$string['gatewaydescription'] = 'Duitku is a Payment Gateway Online in Indonesia that accepts payment through bank transfer, Debit/Credit Card, Virtual Account, Retail Stores dan e-wallet';
+$string['gatewaydescription'] = 'Duitku is a payment gateway online in Indonesia that accepts payment through bank transfer, Debit/Credit Card, Virtual Account, Retail Stores dan e-wallet';
 $string['paymentcancelled'] = 'Payment was cancelled';
-$string['payment_expirations'] = 'Duitku Payment Gateway checks for expired transaction in database';
+$string['payment_expirations'] = 'Duitku payment gateway checks for expired transaction in database';
 $string['paymentsuccessful'] = 'Payment was successful';
 $string['pending_message'] = 'User has not completed payment yet';
 $string['pluginname'] = 'Duitku';
 $string['pluginname_desc'] = 'The Duitku module allows you to set up paid courses.';
-$string['transactions'] = 'Duitku Transactions';
+$string['transactions'] = 'Duitku transactions';
 $string['user_return'] = 'User has returned from redirect page';
 
 $string['environment:production'] = 'Production';
 $string['environment:sandbox'] = 'Sandbox';
 
-$string['duitku_request_log'] = 'Duitku Paygw Plugin Log';
+$string['duitku_request_log'] = 'Duitku paygw Plugin Log';
 $string['log_request_transaction'] = 'Requesting a transaction to Duitku';
-$string['log_request_transaction_response'] = 'Duitku response to Request Transaction';
+$string['log_request_transaction_response'] = 'Duitku response to request transaction';
 $string['log_check_transaction'] = 'Checking transaction to Duitku';
-$string['log_check_transaction_response'] = 'Duitku respose for Checking Transaction';
-$string['log_callback'] = 'Received Callback from Duitku';
+$string['log_check_transaction_response'] = 'Duitku respose for che cking transaction';
+$string['log_callback'] = 'Received callback from Duitku';
 
 $string['return_header'] = '<h2>Pending Transaction</h2>';
 $string['return_sub_header'] = 'Course name : {$a->fullname}<br />';
 $string['return_body'] = 'If you have already paid, wait a few moments then check again if you are already enrolled. <br /> We kept your payment <a href="{$a->reference}">here</a> in case you would like to return.';
 
-$string['privacy:metadata:paygw_duitku:paygw_duitku'] = 'Transaction data for the Duitku Payment Gateway Plugin.';
+$string['privacy:metadata:paygw_duitku:paygw_duitku'] = 'Transaction data for the Duitku payment gateway plugin.';
 $string['privacy:metadata:paygw_duitku:paygw_duitku:userid'] = 'The ID of the user making requesting a transaction';
 $string['privacy:metadata:paygw_duitku:paygw_duitku:component'] = 'Component payment type. Corelates to the enrol column in the enrol table';
 $string['privacy:metadata:paygw_duitku:paygw_duitku:paymentarea'] = 'Payment area of transaction';
@@ -73,9 +73,9 @@ $string['privacy:metadata:paygw_duitku:paygw_duitku:pending_reason'] = 'The reas
 $string['privacy:metadata:paygw_duitku:paygw_duitku:timeupdated'] = 'The time this specific transaction is updated';
 $string['privacy:metadata:paygw_duitku:paygw_duitku:expiryperiod'] = 'The expiry period for this specific transaction';
 $string['privacy:metadata:paygw_duitku:paygw_duitku:referenceurl'] = 'The reference link for when user wants to go back to a previous transaction.';
-$string['privacy:metadata:paygw_duitku:duitku_com'] = 'Duitku Payment Gateway plugin sends user data from Moodle to Duitku.';
-$string['privacy:metadata:paygw_duitku:duitku_com:merchantcode'] = 'Duitku Merchant Code';
-$string['privacy:metadata:paygw_duitku:duitku_com:apikey'] = 'Duitku API Key';
+$string['privacy:metadata:paygw_duitku:duitku_com'] = 'Duitku payment gateway plugin sends user data from Moodle to Duitku.';
+$string['privacy:metadata:paygw_duitku:duitku_com:merchantcode'] = 'Duitku merchant code';
+$string['privacy:metadata:paygw_duitku:duitku_com:apikey'] = 'Duitku API key';
 $string['privacy:metadata:paygw_duitku:duitku_com:signature'] = 'Signature generated to verify a transaction';
 $string['privacy:metadata:paygw_duitku:duitku_com:merchant_order_id'] = 'The order ID generated per order';
 $string['privacy:metadata:paygw_duitku:duitku_com:paymentAmount'] = 'The cost of the course requested for transaction';
