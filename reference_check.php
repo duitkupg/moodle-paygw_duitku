@@ -27,7 +27,6 @@ use paygw_duitku\duitku_helper;
 use paygw_duitku\duitku_status_codes;
 
 require('../../../config.php');
-
 require_login();
 
 $merchantorderid = required_param('merchantOrderId', PARAM_ALPHANUMEXT);;
@@ -63,13 +62,7 @@ $existingdata = $DB->get_record('paygw_duitku', $params);
 
 // Check for HTTP code first.
 // Earlier PHP versions would throw an error to $response->statusCode if not found. Later version would not.
-if (($httpcode === 400) && (!empty($existingdata))) {
-    $redirecturl = $environment === 'sandbox' ? 'https://app-sandbox.duitku.com/' : 'https://app-prod.duitku.com/';
-    $redirecturl .= 'redirect_checkout?reference=' . $existingdata->reference;
-    header('location: '. $redirecturl);die;
-}
-
-if (($httpcode === 400) && (empty($existingdata))) {
+if ($httpcode !== 200) {
     $redirecturl = "{$CFG->wwwroot}/payment/gateway/duitku/call.php?component={$component}&paymentarea={$paymentarea}&itemid={$itemid}&description={$description}";
     header('location: '. $redirecturl);die;
 }

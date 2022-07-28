@@ -27,7 +27,6 @@ use paygw_duitku\duitku_helper;
 
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
-
 require_login();
 
 // Parameters sent from Duitku return response and return url at enrol.html.
@@ -89,9 +88,9 @@ $a->teacher = get_string('defaultcourseteacher'); // Variable name must be $a, a
 $a->fullname = $fullname;// I have tried using other variable name than $a and it was not recognized.
 $a->reference = $referenceurl;
 $response = (object)[
-    'return_header' => get_string('return_header', 'paygw_duitku'),
-    'return_sub_header' => get_string('return_sub_header', 'paygw_duitku', $a),
-    'return_body' => get_string('return_body', 'paygw_duitku', $a)
+    'return_header' => format_text(get_string('return_header', 'paygw_duitku'), FORMAT_MOODLE),
+    'return_sub_header' => format_text(get_string('return_sub_header', 'paygw_duitku', $a), FORMAT_MOODLE),
+    'return_body' => format_text(get_string('return_body', 'paygw_duitku', $a), FORMAT_MOODLE)
 ];
 
 // Output reason why user has not been enrolled yet.
