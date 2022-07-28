@@ -86,3 +86,7 @@ $string['privacy:metadata:paygw_duitku:duitku_com:address'] = 'Address of the us
 $string['privacy:metadata:paygw_duitku:duitku_com:city'] = 'City of the user requesting a transaction';
 $string['privacy:metadata:paygw_duitku:duitku_com:email'] = 'Email of the user requesting a transaction';
 $string['privacy:metadata:paygw_duitku:duitku_com:country'] = 'Country of the user requesting a transaction';
+
+$string['messageprovider:pending_payment'] = 'Duitku pending payment notification';
+$string['messageprovider:pending_payment_body'] = 'You have a pending payment for the "{$a->fullname}" course <a href="{$a->referenceurl}">here</a>';
+$string['messageprovider:pending_payment_small'] = 'A pending payment awaits you';

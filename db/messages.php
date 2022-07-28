@@ -15,20 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Contains the version information.
- *
+ * Message API for pending payments.
  * @package   paygw_duitku
  * @copyright 2022 Michael David <mikedh2612@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @var stdClass $plugin
  */
 
 defined('MOODLE_INTERNAL') || die();
-
-// Reference https://docs.moodle.org/dev/version.php.
-
-$plugin->version    = 2022051805;
-$plugin->requires   = 2015111600; // Moodle Version 3.0 (could change depending if not supported).
-$plugin->maturity   = MATURITY_STABLE;
-$plugin->release    = '1.0.0';
-$plugin->component  = 'paygw_duitku';
+$messageproviders = array (
+    // Notify students whenever they have a pending payment
+    'pending_payment' => array ()
+);
