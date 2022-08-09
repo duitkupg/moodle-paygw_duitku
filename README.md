@@ -43,3 +43,5 @@ After you download the plugin.
 
 Duitku offers payment in Rupiah currencies that supported with virtual accounts, QRIS, paylater, e-wallet, retail outlets and credit card around Indonesia.
 You might visit our website at [www.duitku.com](https://www.duitku.com/) for further information.
+
+This plugin uses the new payment gateway API available in Moodle 3.11 and higher. If you are running an older version of Moodle and would like to connect using an older enrolment style plugin - please see the enrol_duitku plugin in our github repository [here](https://github.com/duitkupg/moodle-enrol_duitku).
